@@ -1,0 +1,198 @@
+---
+title: "Final Presentation"
+author: "Danica Butler"
+date: "December 19, 2018"
+output: ioslides_presentation
+---
+
+#Introduction
+- This dataset is predicting whether a pitch on the TV Show Shark Tank gets a deal or not
+- Helpful to those wishing to go on Shark Tank
+- The target variable is "deal", which either true or false.
+- Dataset found on Kaggle, added some columns to analyze data
+- 22 Variables- most important are the "Asked for" and "Exchanged stake"
+
+#Input Variables
+- Name and Description of Product/Service, Category it is in, Website
+- Episode/ Season, Air Date
+- Entreprenuers Names, Location, Multiple or Not
+- $ Asked For, Percent Equity Offered, Valuation of Company
+- Sharks Present for Episode
+
+#Input Dataset
+```{r}
+ST = read.csv("C:/Users/student/Documents/Senior Year/Programming with R/FinalDataset.csv")
+library(caret)
+library(ggplot2)
+```
+
+---
+```{r}
+library(ggplot2)
+ggplot(data = ST) + geom_bar(mapping = aes(x = deal), position = "dodge") + ggtitle("Graph of Target Variable") + labs(fill = "True or False")
+
+```
+
+---
+```{r}
+ggplot(data = ST) + geom_bar(mapping = aes(x = AboveAvg), position = "dodge") + ggtitle("Graph of Above or Below Average Ask") + labs(fill = "True or False")
+```
+
+---
+```{r}
+ggplot(data = ST) + geom_bar(mapping = aes(x = AboveAvgPer), position = "dodge") + ggtitle("Graph of Above or Below Average Percentage Ask") + labs(fill = "True or False")
+```
+
+---
+```{r}
+ggplot(data = ST) + geom_bar(mapping = aes(x = deal, fill = AboveAvg), position = "dodge") + ggtitle("Getting a Deal based on Money Asked For") + labs(fill = "Did they ask for more than 250,000")
+```
+
+---
+```{r}
+ggplot(data = ST) + geom_bar(mapping = aes(x = deal, fill = AboveAvgPer), position = "dodge") + ggtitle("Getting a Deal based on Percentage Given") + labs(fill = "Did they Give more than 17.5%?")
+```
+
+---
+```{r}
+ggplot(data = ST) + geom_point(mapping = aes(x = exchangeForStake, y = askedFor/100, color = deal)) + ggtitle("Comparing Money Asked For and Equity Given") + labs(fill = "Accepted A Deal")
+```
+
+---
+```{r}
+ggplot(data = ST) + geom_line(mapping = aes(x = episode, y = valuation/10000, color = deal), position = "dodge") + ggtitle("Trends of Valuation of the Company by Episode")
+```
+
+---
+```{r}
+ggplot(data = ST) + geom_density(mapping = aes(x = valuation/1000)) + ggtitle("Density of Valuation")
+```
+
+---
+```{r}
+ggplot(data = ST) + geom_density(mapping = aes(x = exchangeForStake)) + ggtitle("Density of Exchanged Stake")
+```
+
+---
+```{r}
+ggplot(data = ST) + geom_bar(mapping = aes(x = episode, fill = deal), position = "dodge") + ggtitle("Deals per Episode") + labs(fill = "Accepted A Deal")
+```
+
+---
+```{r}
+ggplot(data = ST) + geom_bar(mapping = aes(x = season, fill = deal), position = "dodge") + ggtitle("Deals per Season") + labs(fill = "Accepted A Deal")
+```
+
+---
+```{r}
+ggplot(data = ST) + geom_count(mapping = aes(x = MultipleEntreprenuers, y = exchangeForStake, color = deal), position = "dodge") + ggtitle("Percentage Given based on One or More Entreprenuers")
+```
+
+---
+```{r}
+ggplot(data = ST) + geom_bar(mapping = aes(x = deal, fill = shark1), position = "dodge") + ggtitle("Deal Based on Shark1") + labs(fill = "Shark")
+```
+
+---
+```{r}
+ggplot(data = ST) + geom_bar(mapping = aes(x = deal, fill = shark2), position = "dodge") + ggtitle("Deal Based on Shark2") + labs(fill = "Shark")
+```
+
+---
+```{r}
+ggplot(data = ST) + geom_bar(mapping = aes(x = deal, fill = shark3), position = "dodge") + ggtitle("Deal Based on Shark3") + labs(fill = "Shark")
+```
+
+---
+```{r}
+ggplot(data = ST) + geom_bar(mapping = aes(x = deal, fill = shark4), position = "dodge") + ggtitle("Deal Based on Shark4") + labs(fill = "Shark")
+```
+
+
+---
+```{r}
+ggplot(data = ST) + geom_bar(mapping = aes(x = deal, fill = shark5), position = "dodge") + ggtitle("Deal Based on Shark5") + labs(fill = "Shark")
+```
+
+
+#Handling Missing Values Method 1
+- ST$askedFor <- replace(ST$askedFor, ST$askedFor == 0, mode(ST$askedFor))
+- This replace missing values in the episode column with the mode of the column.
+
+
+#Handling Missing Values Method 2
+- ST$exchangeForStake <- replace(ST$exchangeForStake, is.na(ST$exchangeForStake), mean(ST$exchangeForStake, na.rm =TRUE))
+- This replace missing values in the episode column with the mean of the column.
+
+#Handling Missing Values Method 3
+- ST$valuation <- replace(ST$valuation, is.na(ST$valuation), median(ST$valuation, na.rm = TRUE))
+- This replace missing values in the episode column with the median of the column.
+
+
+#Comparing Imputation Methods 
+splitIndex <- createDataPartition(ST$deal, p = .70, list = FALSE, times = 1)
+train <- ST[splitIndex,]
+test <- ST[-splitIndex,]
+
+model <- ranger(deal ~., data = train)
+pred <- predict(model, data = test)$predictions
+cm <- confusionMatrix(pred, test$deal, positive = "1")
+cm
+
+#Results of Confusion Matrix
+-Accuracy : 0.473
+-95% CI : (0.3904, 0.5566)
+
+
+#Recoding categorical variables 
+```{r}
+levels(ST$category)
+levels(ST$category) <- c("Food", "Outdoors", "Childrens", "Childrens", "Childrens", "Childrens", "Childrens", "Other", "Fashion", "Fitness", "Other", "Tech", "Tech", "Fashion", "Fitness", "Fitness", "Fitness", "Home", "Outdoors", "Fitness", "Other", "Other", "Home", "Home", "Home", "Home", "Home", "Fashion", "Fashion", "Fashion", "Fashion", "Fashion", "Tech", "Other", "Food", "Other", "Tech", "Outdoors", "Other", "Fashion", "Home", "Home", "Tech", "Other", "Food", "Home", "Childrens", "Fashion", "Food", "Other", "Food", "Fashion", "Fashion", "Fashion")
+```
+
+
+
+#Predictive Models
+#Forest Model
+Grid1 = expand.grid(mtry = c(1:2), splitrule = c("gini"),
+                     min.node.size = c(1:2))
+
+forest_ST_tuned <- train(deal ~.,data = ST, method = "ranger", 
+               trControl = trainControl(method ="cv", number = 7, verboseIter = TRUE),
+               tuneGrid = Grid1)
+forest_ST_tuned
+
+Accuracy : .507071
+
+
+#Decision Tree Model
+dtree_ST_tuned <- train(deal ~.,data = ST, method = "rpart", 
+               trControl = trainControl(method ="cv", number = 10, verboseIter = TRUE))
+dtree_ST_tuned
+
+Accuracy : 0.5277119   
+cp : 0.01844262  
+
+
+#Confusion Matrix Model
+splitIndex <- createDataPartition(ST$deal, p = .70, list = FALSE, times = 1)
+train <- ST[splitIndex,]
+test <- ST[-splitIndex,]
+
+model <- ranger(deal ~., data = train)
+pred <- predict(model, data = test)$predictions
+cm <- confusionMatrix(pred, test$deal, positive = "1")
+cm
+
+Accuracy : 0.5338          
+
+
+#GLMnet Model
+Grid2 = expand.grid(.alpha=0:1,.lambda=seq(0.001,1,length=10))
+
+
+glm_ST = train(deal~., data=ST, method="glmnet")
+glm2_ST = train(deal~., data=ST, method="glmnet", tuneGrid = Grid2)
+plot(glm_ST)
+plot(glm2_ST)
+ 
